@@ -50,5 +50,28 @@ let _ =
    Takes a state and an expression, and returns the value of the expression in 
    the given state.
 *)
-let eval = failwith "Not implemented yet"
+let boolToInt boolValue = if boolValue then 1 else 0 
+let intToBool intValue = intValue <> 0
+
+let inOp op l r = match op with
+  | "+"  -> l + r
+  | "-"  -> l - r
+  | "*"  -> l * r
+  | "/"  -> l / r
+  | "%"  -> l mod r
+  | "<"  -> intToBool (l < r)
+  | "<=" -> intToBool (l <= r)
+  | ">"  -> intToBool (l > r)
+  | ">=" -> intToBool (l >= r)
+  | "==" -> intToBool (l == r)
+  | "!=" -> intToBool (l != r)
+  | "!!" -> intToBool ((boolToInt l) || (boolToInt r))
+  | "&&" -> intToBool ((boolToInt l) && (boolToInt r))
+  | _    -> failwith (Printf.sprintf "Unknown operator");;
+
+let rec eval expr =
+     match expr with
+     | Const constValue -> constValue
+     | Var varName   -> state varName
+     | Binop (op, l, r) -> inOp op (eval state l) (eval state r);;
                     
