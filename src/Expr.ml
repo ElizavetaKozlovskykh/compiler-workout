@@ -67,10 +67,11 @@ let inOp op l r = match op with
   | "!=" -> intToBool (l != r)
   | "!!" -> intToBool ((boolToInt l) || (boolToInt r))
   | "&&" -> intToBool ((boolToInt l) && (boolToInt r))
+  | _    -> failwith "Unknown operation"
 
 let rec eval expr =
      match expr with
      | Const constValue -> constValue
      | Var varName   -> state varName
-     | Binop (op, l, r) -> (inOp op) (eval state l) (eval state r)
+     | Binop (op, l, r) -> (inOp op) (eval state l) (eval state r);;
                     
