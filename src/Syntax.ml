@@ -35,13 +35,35 @@ module Expr =
     let update x v s = fun y -> if x = y then v else s y
 
     (* Expression evaluator
-
           val eval : state -> t -> int
  
        Takes a state and an expression, and returns the value of the expression in 
        the given state.
     *)
-    let eval _ = failwith "Not implemented yet"
+	let boolToInt b = if b then 1 else 0
+	let intToBool x = x != 0
+
+	(* Binop evaluator *)
+	let eval_op op l r = match op with
+		| "+"  -> l + r
+		| "-"  -> l - r
+		| "*"  -> l * r
+		| "/"  -> l / r
+		| "%"  -> l mod r
+		| "<"  -> boolToInt (l < r)
+		| "<=" -> boolToInt (l <= r)
+		| ">"  -> boolToInt (l > r)
+		| ">=" -> boolToInt (l >= r)
+		| "==" -> boolToInt (l = r)
+		| "!=" -> boolToInt (l != r)
+		| "&&" -> boolToInt (intToBool l && intToBool r)
+		| "!!" -> boolToInt (intToBool l || intToBool r)
+		| _    -> failwith ("Unknown operator '" ^ op ^ "'") ;;
+    
+	let rec eval s e = match e with
+		| Const c -> c
+		| Var n -> s n
+		| Binop (op, l, r) -> eval_op op (eval s l) (eval s r)
 
   end
                     
@@ -60,12 +82,17 @@ module Stmt =
     type config = Expr.state * int list * int list 
 
     (* Statement evaluator
-
           val eval : config -> t -> config
-
        Takes a configuration and a statement, and returns another configuration
     *)
-    let eval _ = failwith "Not implemented yet"
+
+     let rec eval ((state, is, os): config) (s:t) : config = match s with
+      | Read(x) -> (match is with
+		| [] -> failwith(Printf.sprintf "No more input")
+		| hd::tl -> (Expr.update x hd state, tl, os))
+      | Write(e) -> (state, is, (Expr.eval state e)::os)
+      | Assign(x, e) -> ((Expr.update x (Expr.eval state e) state), is, os)
+      | Seq(s1, s2) -> (eval (eval (state, is, os) s1) s2)
                                                          
   end
 
@@ -75,9 +102,7 @@ module Stmt =
 type t = Stmt.t    
 
 (* Top-level evaluator
-
      eval : int list -> t -> int list
-
    Takes a program and its input stream, and returns the output stream
 *)
 let eval i p =
